@@ -39,8 +39,13 @@ def get_video_links():
 class CreateVideoView(generics.CreateAPIView):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
+    template_name = 'video_upload.html'
 
     def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
         video_file = request.FILES.get('video_file')
         if not video_file:
             return Response({'error': 'No video file provided'}, status=status.HTTP_400_BAD_REQUEST)
@@ -57,19 +62,14 @@ class CreateVideoView(generics.CreateAPIView):
                 description=request.data.get('description'),
                 video_file=request.data.get('video_file'),
                 )
-            y.upload(temp_file.name, '/videos/' + now + 'не грузит нихрена' + video_file.name)      
+            y.upload(temp_file.name, '/videos/' + now + '_' + video_file.name)      
         except Exception as e:
             os.remove(temp_file.name)
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         os.remove(temp_file.name)
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 
 
 class ListVideoView(generics.ListAPIView):
