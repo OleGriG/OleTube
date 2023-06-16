@@ -6,10 +6,14 @@ from rest_framework.response import Response
 import os
 import tempfile
 from django.conf import settings
+import datetime
 from rest_framework import status
 from yadisk import YaDisk
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
+
+
+YANDEX_TOKEN = os.getenv('YANDEX_TOKEN')
 
 
 def index(request):
@@ -19,10 +23,11 @@ def index(request):
 
 
 def get_video_links():
-    y = YaDisk(token="y0_AgAAAAA0qF90AAoK0AAAAADlaX_tXppp0ALeQQiANI17xdI3nfpBuds")
+    y = YaDisk(token=YANDEX_TOKEN)
     files = y.listdir('/videos/')
     links = []
-    id = 7
+    video = Video.objects.all()
+    id = 0
     for file in files:
         id+=1
         videooo = get_object_or_404(Video, id=id)
@@ -44,9 +49,15 @@ class CreateVideoView(generics.CreateAPIView):
             for chunk in video_file.chunks():
                 temp_file.write(chunk)
 
-        y = YaDisk(token="y0_AgAAAAA0qF90AAoK0AAAAADlaX_tXppp0ALeQQiANI17xdI3nfpBuds")
+        y = YaDisk(token=YANDEX_TOKEN)
         try:
-            y.upload(temp_file.name, '/videos/' + video_file.name)
+            now = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            Video.objects.create(
+                title=request.data.get('title'),
+                description=request.data.get('description'),
+                video_file=request.data.get('video_file'),
+                )
+            y.upload(temp_file.name, '/videos/' + now + 'не грузит нихрена' + video_file.name)      
         except Exception as e:
             os.remove(temp_file.name)
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -14,8 +14,8 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
 
+load_dotenv()
 YANDEX_TOKEN = os.getenv('YANDEX_TOKEN')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
