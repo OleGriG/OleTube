@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from user.models import User
 from embed_video.fields import EmbedVideoField
 from django.core.validators import FileExtensionValidator
 
@@ -12,6 +12,7 @@ class Video(models.Model):
     dislikes = models.ManyToManyField(User, related_name='video_dislikes', blank=True)
     likes_count = models.IntegerField(default=0)
     dislike_count = models.IntegerField(default=0)
+    name = models.CharField(max_length=255, default='')
     #uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
