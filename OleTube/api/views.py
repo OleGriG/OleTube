@@ -10,9 +10,10 @@ import datetime
 from rest_framework import status
 from yadisk import YaDisk
 from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.generic import TemplateView
-from user.models import User
+from users.forms import User
 
 
 YANDEX_TOKEN = os.getenv('YANDEX_TOKEN')
@@ -89,28 +90,43 @@ class DeleteVideoView(generics.DestroyAPIView):
     lookup_field = 'id'
 
 
+@login_required
 @api_view(['POST'])
 def like_video(request, video_id):
     video = Video.objects.get(id=video_id)
     user = User.objects.get(id=request.user.id)
-    video.likes.add(user)
-    video.dislikes.remove(user)
-    video.likes_count += 1  
-    video.save()
-    return Response({'message': 'Лайк добавлен'})
+    if user not in video.likes.all():  # проверяем, что пользователь еще не поставил лайк
+        video.likes.add(user)
+        video.dislikes.remove(user)
+        video.likes_count += 1  
+        video.save()
+        return Response({'message': 'Лайк добавлен'})
+    else:
+        video.likes.remove(user)
+        video.likes_count -= 1  
+        video.save()
+        return Response({'message': 'лайк убран'})
 
 
+@login_required
 @api_view(['POST'])
 def dislike_video(request, id):
     video = Video.objects.get(id=id)
     user = User.objects.get(id=request.user.id)
-    video.likes.remove(user)
-    video.dislikes.add(user)
-    video.dislike_count += 1
-    video.save()
-    return Response({'message': 'Дизлайк добавлен'})
+    if user not in video.likes.all():
+        video.likes.remove(user)
+        video.dislikes.add(user)
+        video.dislike_count += 1
+        video.save()
+        return Response({'message': 'Дизлайк добавлен'})
+    else:
+        video.dislikes.remove(user)
+        video.dislike_count -= 1
+        video.save()
+        return Response({'message': 'дизлайк убран'})
 
 
+@login_required
 @api_view(['POST'])
 def add_comment(request, id):
     video = Video.objects.get(id=id)

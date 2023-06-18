@@ -5,14 +5,14 @@
     {% for video in videos %}
       <h1>{{ video.title }}</h1>
       <div class="container">
-        <h1 class="mb-4">Видео</h1>
+        <h1 class="mb-4">{{ video.videooo.title }}</h1>
         <div class="embed-responsive embed-responsive-16by9 mb-3">
           <video class="embed-responsive-item" controls>
             <source src="{{ video.link }}" type="video/mp4">
             Ваш браузер не поддерживает тег video.
           </video>
         </div>
-        <p>{{ video.videooo.title }}</p>
+        <p>{{ video.videooo.description }}</p>
       </div>
       <p class="mt-4">Лайки: <span id="likes-{{ video.videooo.likes_count }}">{{ video.videooo.likes_count }}</span></p>
       <p>Дизлайки: <span id="dislikes-{{ video.videooo.dislike_count }}">{{ video.videooo.dislike_count  }}</span></p>
@@ -51,6 +51,7 @@
           <p>Пока нет комментариев.</p>
         {% endfor %}
       </div>
+      <hr style="height:5px; width:100%; border-width:0; color:red; background-color:red">
     {% endfor %}
   </div>
   

@@ -17,9 +17,25 @@
         <li class="nav-item">
           <a class="nav-link" href="{% url 'index' %}">Главная</a>
         </li>
+        {% if user.is_authenticated %}
         <li class="nav-item">
-            <a href="{% url 'api:video-create' %}" class="btn btn-primary">Создать новое видео</a>
+          <a href="{% url 'api:video-create' %}" class="btn btn-primary">Создать новое видео</a>
         </li>
+
+        <li class="nav-item"> 
+          <a class="nav-link link-light {% if view_name == 'users:logout' %}active{% endif %}" href="{% url 'users:logout' %}">Выйти</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'profile' %}">Личный кабинет</a>
+        </li>
+        {% else %}
+        <li class="nav-item"> 
+          <a class="nav-link link-light {% if view_name == 'users:login' %}active{% endif %}" href="{% url 'users:login' %}">Войти</a>
+        </li>
+        <li class="nav-item"> 
+          <a class="nav-link link-light {% if view_name == 'users:signup' %}active{% endif %}" href="{% url 'users:signup' %}">Регистрация</a>
+        </li>
+        {% endif %}
       </ul>
     </div>
   </nav>

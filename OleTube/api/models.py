@@ -1,5 +1,5 @@
 from django.db import models
-from user.models import User
+from users.forms import User
 from embed_video.fields import EmbedVideoField
 from django.core.validators import FileExtensionValidator
 
