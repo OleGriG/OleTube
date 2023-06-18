@@ -1,7 +1,5 @@
 from rest_framework import serializers
 from .models import Video, Comment
-import requests
-from django.core.files import File
 
 
 class CommentSerializer(serializers.ModelSerializer):
