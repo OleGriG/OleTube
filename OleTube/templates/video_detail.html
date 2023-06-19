@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-body">
+            <h1 class="card-text">{{ video.title }}</h1>
+          </div>
+        </div>
+        <div class="embed-responsive embed-responsive-16by9 mb-3">
+            <video class="embed-responsive-item" controls>
+              <source src="{{ video.url }}" type="video/mp4">
+              Ваш браузер не поддерживает тег video.
+            </video>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <p class="card-text">{{ video.description }}</p>
+            </div>
+          </div>
+          <p class="mt-4">Лайки: <span id="likes-{{ video.likes_count }}">{{ video.likes_count }}</span></p>
+          <p>Дизлайки: <span id="dislikes-{{ video.videooo.dislike_count }}">{{ video.dislike_count  }}</span></p>
+
+          <div class="mt-4">
+            <form action="/api/videos/like/{{ video.id }}/" method="POST">
+              {% csrf_token %}
+              <button class="btn btn-danger" type="submit">Like</button>
+            </form>
+            <form action="/api/videos/{{ video.id }}/dislike/" method="POST">
+              {% csrf_token %}
+              <button class="btn btn-danger" type="submit">Dislike</button>
+            </form>
+          </div>
+
+          <form class="mt-4" id="comment-form-{{ video.id }}" method="POST" action="/api/videos/{{ video.id }}/comment/">
+            {% csrf_token %}
+            <input type="hidden" name="video_id" value="{{ video.id }}">
+            <div class="form-group">
+              <label for="comment-{{ video.id }}">Оставьте комментарий:</label>
+              <textarea class="form-control" name="content" id="comment-{{ video.id }}" rows="3"></textarea>
+            </div>
+            <button class="btn btn-danger" type="submit">Отправить</button>
+          </form>
+
+          <h2 class="mt-4">Comments</h2>
+          <div id="comments-{{ video.id }}">
+            {% for comment in video.comments.all %}
+              <div class="card mb-3">
+                <div class="card-header">{{ comment.user.username }}</div>
+                <div class="card-body">
+                  <p class="card-text">{{ comment.content }}</p>
+                </div>
+              </div>
+            {% empty %}
+              <p>Пока нет комментариев.</p>
+            {% endfor %}
+          </div>
+      </div>
+      <div class="col-md-4">
+        <h2>Другие видео автора:</h2>
+        {% for v in user_videos %}
+          <div class="card mb-3">
+            <div class="card-body">
+              <h5 class="mb-4">
+                <a class="nav-link" href="{% url 'video_detail' v.id %}">{{ v.title }}</a>
+              </h5>
+            </div>
+          </div>
+        {% empty %}
+          <p>У этого автора пока нет других видео.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+<hr style="height:5px; width:100%; border-width:0; color:red; background-color:red">
+{% endblock %}

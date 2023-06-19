@@ -1,5 +1,5 @@
 from rest_framework import generics
-from .models import Video, Comment
+from .models import Video, Comment, UserVideo
 from .serializers import VideoSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -20,18 +20,16 @@ YANDEX_TOKEN = os.getenv('YANDEX_TOKEN')
 
 def index(request):
     videos = get_video_links()
-    videos_model = list(Video.objects.all())
-    return render(request, 'index.html', {'videos': videos, 'videos_model': videos_model})
+    return render(request, 'index.html', {'videos': videos})
 
 
 def get_video_links():
     y = YaDisk(token=YANDEX_TOKEN)
     files = y.listdir('/videos/')
     links = []
-    videos = Video.objects.all()
     id = -1
     for file in files:
-        id+=1
+        id += 1
         videooo = get_object_or_404(Video, name=file.name)
         link = y.get_download_link(file.path)
         links.append({'name': file.name, 'link': link, 'videooo': videooo})
@@ -56,13 +54,17 @@ class CreateVideoView(generics.CreateAPIView, TemplateView):
         y = YaDisk(token=YANDEX_TOKEN)
         try:
             now = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-            Video.objects.create(
+            video = Video.objects.create(
                 title=request.data.get('title'),
                 description=request.data.get('description'),
                 video_file=request.data.get('video_file'),
                 name=now + '_' + video_file.name,
                 )
+            UserVideo.objects.create(user=request.user, video=Video.objects.last())
             y.upload(temp_file.name, '/videos/' + now + '_' + video_file.name)
+            url = y.get_download_link('/videos/' + now + '_' + video_file.name)
+            video.url = url
+            video.save()
         except Exception as e:
             os.remove(temp_file.name)
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -151,3 +153,12 @@ def get_comments(request, video_id):
     video = Video.objects.get(id=video_id)
     comments = [{'user': comment.user.username, 'comment': comment.comment} for comment in video.comments.all()]
     return JsonResponse({'comments': comments})
+
+
+def video_detail(request, video_id):
+    video = get_object_or_404(Video, id=video_id)
+    user_video = UserVideo.objects.filter(user=request.user).order_by('-id')[:5]
+    user_videos = [uv.video for uv in user_video]
+    user_videos.remove(video)
+    return render(request, 'video_detail.html', {'video': video, 'user_videos': user_videos})
+

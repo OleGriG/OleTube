@@ -2,6 +2,7 @@ from django.views.generic import CreateView
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from api.models import UserVideo
 
 
 from .forms import CreationForm
@@ -15,4 +16,8 @@ class SignUp(CreateView):
 
 @login_required
 def profile(request):
-    return render(request, 'profile.html', {'user': request.user})
+    return render(request, 'profile.html',
+                  {'user': request.user,
+                   'user_video': UserVideo.objects.filter(user=request.user)
+                   }
+                  )

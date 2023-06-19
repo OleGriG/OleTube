@@ -11,9 +11,10 @@ class Video(models.Model):
     dislikes = models.ManyToManyField(User, related_name='video_dislikes', blank=True)
     likes_count = models.IntegerField(default=0)
     dislike_count = models.IntegerField(default=0)
-    name = models.CharField(max_length=255, default='')
-    #uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=500, default='')
     created_at = models.DateTimeField(auto_now_add=True)
+    url = models.CharField(max_length=1000, blank=True, null=True)
+
     def __str__(self):
         return self.title
     
@@ -26,3 +27,8 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.content[:20]}"
+    
+
+class UserVideo(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    video = models.ForeignKey(Video, on_delete=models.CASCADE)

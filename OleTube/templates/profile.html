@@ -4,4 +4,21 @@
 <h1>Личный кабинет</h1>
 <p>Имя пользователя: {{ user.username }}</p>
 <p>Email: {{ user.email }}</p>
+
+<h1>Ваши видео:</h1>
+<hr style="height:5px; width:100%; border-width:0; color:red; background-color:red">
+<div class="row">  
+    {% for video in user_video %}
+        <div class="col-md-6">
+            <h2>               
+                <a class="nav-link" href="{% url 'video_detail' video.video.id %}">{{ video.video.title }}</a>
+            </h2>
+            <video src="{{ video.video.url }}" controls width="400" height="225"></video>
+        </div>
+        {% if forloop.counter|divisibleby:2 %}
+            </div>
+            <div class="row">
+        {% endif %}
+    {% endfor %}
+</div>
 {% endblock %}
