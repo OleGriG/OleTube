@@ -10,7 +10,7 @@ from rest_framework import status
 from yadisk import YaDisk
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.generic import TemplateView
 from users.forms import User
 
@@ -32,6 +32,7 @@ def get_video_links():
         id += 1
         videooo = get_object_or_404(Video, name=file.name)
         link = y.get_download_link(file.path)
+        Video.objects.filter(name=file.name).update(url=link)
         links.append({'name': file.name, 'link': link, 'videooo': videooo})
     return links
 
@@ -91,22 +92,38 @@ class DeleteVideoView(generics.DestroyAPIView):
     lookup_field = 'id'
 
 
+def get_user_videos(video_id):
+    video = Video.objects.get(id=video_id)
+    user_videooo = get_object_or_404(UserVideo, video=video)
+    user = user_videooo.user
+    user_video = UserVideo.objects.filter(user=user).order_by('-id')[:5]
+    user_videos = [uv.video for uv in user_video]
+    user_videos.remove(video)
+    return user_videos
+
+
+
 @login_required
 @api_view(['POST'])
 def like_video(request, video_id):
     video = Video.objects.get(id=video_id)
     user = User.objects.get(id=request.user.id)
+    user_videos = get_user_videos(video_id)
     if user not in video.likes.all():  # проверяем, что пользователь еще не поставил лайк
         video.likes.add(user)
-        video.dislikes.remove(user)
-        video.likes_count += 1  
+        video.likes_count += 1
+        if user in video.dislikes.all():
+            video.dislikes.remove(user)
+            video.dislike_count -= 1
         video.save()
-        return Response({'message': 'Лайк добавлен'})
+        #return Response({'message': 'Лайк добавлен'})
     else:
         video.likes.remove(user)
         video.likes_count -= 1  
         video.save()
-        return Response({'message': 'лайк убран'})
+        #return Response({'message': 'лайк убран'})
+    html = render(request, 'video_detail.html', {'video': video, 'user_videos': user_videos})
+    return HttpResponse(html)
 
 
 @login_required
@@ -114,17 +131,22 @@ def like_video(request, video_id):
 def dislike_video(request, id):
     video = Video.objects.get(id=id)
     user = User.objects.get(id=request.user.id)
-    if user not in video.likes.all():
-        video.likes.remove(user)
+    user_videos = get_user_videos(id)
+    if user not in video.dislikes.all():
         video.dislikes.add(user)
         video.dislike_count += 1
+        if user in video.likes.all():
+            video.likes.remove(user)
+            video.likes_count -= 1     
         video.save()
-        return Response({'message': 'Дизлайк добавлен'})
+        #return Response({'message': 'Дизлайк добавлен'})
     else:
         video.dislikes.remove(user)
         video.dislike_count -= 1
         video.save()
-        return Response({'message': 'дизлайк убран'})
+        #return Response({'message': 'дизлайк убран'})
+    html = render(request, 'video_detail.html', {'video': video, 'user_videos': user_videos})
+    return HttpResponse(html)
 
 
 @login_required
@@ -133,8 +155,11 @@ def add_comment(request, id):
     video = Video.objects.get(id=id)
     user = User.objects.get(id=request.user.id)
     content = request.POST.get('content')
+    user_videos = get_user_videos(id)
     comment = Comment.objects.create(video=video, user=user, content=content)
-    return Response({'message': 'Комментарий успешно добавлен'})
+    html = render(request, 'video_detail.html', {'video': video, 'user_videos': user_videos})
+    return HttpResponse(html)
+    #return Response({'message': 'Комментарий успешно добавлен'})
 
 
 def get_likes(request, video_id):
@@ -157,8 +182,6 @@ def get_comments(request, video_id):
 
 def video_detail(request, video_id):
     video = get_object_or_404(Video, id=video_id)
-    user_video = UserVideo.objects.filter(user=request.user).order_by('-id')[:5]
-    user_videos = [uv.video for uv in user_video]
-    user_videos.remove(video)
+    user_videos = get_user_videos(video_id)
     return render(request, 'video_detail.html', {'video': video, 'user_videos': user_videos})
 

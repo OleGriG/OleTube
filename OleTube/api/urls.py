@@ -8,7 +8,6 @@ app_name = 'api'
 urlpatterns = [
     path('videos/', ListVideoView.as_view(), name='video-list'),
     path('videos/create/', CreateVideoView.as_view(), name='video-create'),
-    path('videos/<int:id>/', DetailVideoView.as_view(), name='video-detail'),
     path('videos/<int:id>/delete/', DeleteVideoView.as_view(), name='video-delete'),
     path('videos/like/<int:video_id>/', like_video, name='like-video'),
     path('videos/<int:id>/dislike/', dislike_video, name='dislike-video'),
